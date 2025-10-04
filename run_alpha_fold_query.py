@@ -21,14 +21,17 @@ def main(uniprot_ids_in: Sequence[str], ouput_path: Path):
     seen = set(uniprot_ids_out_list)
 
     # Remove all the ids we have seen already
-    ids_to_query = set(uniprot_ids_in).difference(seen)
+    uniprot_ids_in_unique = set(uniprot_ids_in)
+    ids_to_query = uniprot_ids_in_unique.difference(seen)
 
     logger.info(
-        f"Of {len(uniprot_ids_in)} input ids, {len(seen)} are already in the output file '{ouput_path}'."
+        f"Of {len(uniprot_ids_in)} input ids, {len(uniprot_ids_in_unique)} are unique. Out of these {len(seen)} are already in the output file '{ouput_path}'."
     )
     logger.info(f"Therefore I will query {len(ids_to_query)} ids.")
 
-    query_result_generator = alpha_fold_query.query_alphafold_bulk(list(ids_to_query))
+    query_result_generator = alpha_fold_query.query_alphafold_bulk(
+        list(ids_to_query), retries=1, backoff_time=1
+    )
 
     idx = 0
     try:
@@ -40,9 +43,6 @@ def main(uniprot_ids_in: Sequence[str], ouput_path: Path):
             )
 
             if query_result.http_status != 200:
-                logger.warning(
-                    f"Query unsuccessful for id={query_result.accession}. Got status {query_result.http_status}"
-                )
                 continue
 
             df_out.loc[len(df_out)] = [
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
     )
-    data_path = Path("./_2024_buelow_PSpred/data/IDRome_DB_full.csv")
+    data_path = Path("./IDRome.csv")
     output_path = Path("./data_out.parquet")
 
     df_in = pd.read_csv(data_path)
