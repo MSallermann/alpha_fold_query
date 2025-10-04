@@ -71,7 +71,7 @@ def query_alphafold(
     get_cif: bool = True,
     backoff_time: int = 5,
 ) -> AlphaFoldQueryResult:
-    """For a single accession, query the alpha fold database and retrieve the sequence, the plddts, the meta_data and optionally the cif text."""
+    """For a single accession, query the alpha fold database and retrieve some information."""
 
     url = ALPHAFOLD_PREDICTION_URL.format(accession=accession)
 
@@ -140,7 +140,7 @@ def query_alphafold(
 def query_alphafold_bulk(
     accession_list: Sequence[str], **kwargs
 ) -> Generator[AlphaFoldQueryResult]:
-    """For a sequence of accession, return a generator query the alpha fold database and retrieve the sequence and the plddts."""
+    """For a sequence of accessions, return a generator to query the alpha fold database."""
 
     for a in accession_list:
         yield query_alphafold(a, **kwargs)
